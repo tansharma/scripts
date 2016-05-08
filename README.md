@@ -1,2 +1,2 @@
 # scripts
-various scripts for various jobs
+various scripts for varied jobs
