@@ -1,0 +1,28 @@
+#!/bin/sh
+# This script is called by a LaunchDeamon (at a defined interval) and checks to see if Avid software is
+# installed on the client machine. It then checks for the presence of an iLok.
+
+  if [[ -d /Library/Application\ Support/Avid ]] ; then
+	   # If Yes, check to see if iLok is present for Avid Software
+	   if ioreg | grep -q iLok ; then
+		    # If Yes, append a message to iLok_log in /usr/local/sbin
+        echo "`date` : iLok present for `users` on `hostname`" >> /usr/local/sbin/ilok_log.txt
+        # Wait for 15 seconds - Launchd requires file to run for a minimum of 10 seconds
+        sleep 15
+		    exit 0
+	   else
+		    # If No, append ALERT message in iLok_log
+		    echo "`date` : ALERT - iLok Disconnected or Removed for `users` on `hostname`" >> /usr/local/sbin/ilok_log.txt
+		    # Now email an Admin user
+		    echo | mail -s "`date` : iLok Disconnected : `hostname`" <admin@user.com>
+          # Wait for 15 seconds - Launchd requires file to run for a minimum of 10 seconds
+          sleep 15
+	   fi
+	else
+	    # If Avid software doesn't exist on the machine, wait for 15 seconds
+	    sleep 15
+	    # Unload Launchd so that the next check is only performed when the machine reboots.
+	    launchctl unload /Library/LaunchDaemons/<your-plist-file.plist>
+	    # Now exit
+	    exit 0
+	fi
